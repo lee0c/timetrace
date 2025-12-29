@@ -11,6 +11,7 @@
 
 # Build artifacts
 target
+timetrace
 
 # Test binary, built with `go test -c`
 *.test
