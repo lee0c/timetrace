@@ -263,7 +263,7 @@ func (t *Timetrace) EditRecordManual(recordTime time.Time) error {
 }
 
 // EditRecord loads the record internally, applies the option values and saves the record
-func (t *Timetrace) EditRecord(recordTime time.Time, plus string, minus string) error {
+func (t *Timetrace) EditRecord(recordTime time.Time, plus string, minus string, flipBillable bool) error {
 	path := t.fs.RecordFilepath(recordTime)
 
 	record, err := t.loadRecord(path)
@@ -271,7 +271,7 @@ func (t *Timetrace) EditRecord(recordTime time.Time, plus string, minus string) 
 		return err
 	}
 
-	err = t.editRecord(record, plus, minus)
+	err = t.editRecord(record, plus, minus, flipBillable)
 	if err != nil {
 		return err
 	}
@@ -493,10 +493,19 @@ func (t *Timetrace) loadRecord(path string) (*Record, error) {
 	return &record, nil
 }
 
-func (t *Timetrace) editRecord(record *Record, plus string, minus string) error {
+func (t *Timetrace) editRecord(record *Record, plus string, minus string, flipBillable bool) error {
 
 	if record.End == nil {
 		return errors.New("record is still in progress")
+	}
+
+	if flipBillable {
+		if record.IsBillable {
+			record.IsBillable = false
+		} else {
+			record.IsBillable = true
+		}
+		return nil
 	}
 
 	var dur time.Duration

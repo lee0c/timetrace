@@ -65,9 +65,10 @@ func editProjectCommand(t *core.Timetrace) *cobra.Command {
 }
 
 type editOptions struct {
-	Plus   string
-	Minus  string
-	Revert bool
+	Plus   			 string
+	Minus  			 string
+	Revert 			 bool
+	FlipBillable bool
 }
 
 func editRecordCommand(t *core.Timetrace) *cobra.Command {
@@ -79,7 +80,13 @@ func editRecordCommand(t *core.Timetrace) *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			if options.Plus != "" && options.Minus != "" {
-				out.Err("plus and minus flag can not be combined: %s", errors.New("edit not possible"))
+				out.Err("plus and minus flags cannot be combined: %s", errors.New("edit not possible"))
+				return
+			}
+
+			if (options.Plus != "" && options.FlipBillable) ||
+				 (options.Minus != "" && options.FlipBillable) {
+				out.Err("plus/minus flags cannot be combined with billable flip: %s", errors.New("edit not possible"))
 				return
 			}
 
@@ -104,14 +111,14 @@ func editRecordCommand(t *core.Timetrace) *cobra.Command {
 				return
 			}
 
-			if options.Minus == "" && options.Plus == "" {
+			if options.Minus == "" && options.Plus == "" && !options.FlipBillable {
 				out.Info("Opening %s in default editor", recordTime)
 				if err := t.EditRecordManual(recordTime); err != nil {
 					out.Err("failed to edit record: %s", err.Error())
 					return
 				}
 			} else {
-				if err := t.EditRecord(recordTime, options.Plus, options.Minus); err != nil {
+				if err := t.EditRecord(recordTime, options.Plus, options.Minus, options.FlipBillable); err != nil {
 					out.Err("failed to edit record: %s", err.Error())
 					return
 				}
@@ -123,7 +130,8 @@ func editRecordCommand(t *core.Timetrace) *cobra.Command {
 
 	editRecord.PersistentFlags().StringVarP(&options.Plus, "plus", "p", "", "Adds the given duration to the end time of the record")
 	editRecord.PersistentFlags().StringVarP(&options.Minus, "minus", "m", "", "Substracts the given duration to the end time of the record")
-	editRecord.PersistentFlags().BoolVarP(&options.Revert, "revert", "r", false, "Restores the record to it's state prior to the last 'edit' command.")
+	editRecord.PersistentFlags().BoolVarP(&options.Revert, "revert", "r", false, "Restores the record to it's state prior to the last 'edit' command")
+	editRecord.PersistentFlags().BoolVarP(&options.FlipBillable, "billable", "b", false, "Flips a billable record to non-billable or vice versa")
 
 	return editRecord
 }
