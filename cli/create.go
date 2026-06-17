@@ -99,11 +99,22 @@ func createRecordCommand(t *core.Timetrace) *cobra.Command {
 				return
 			}
 
+			isBillable := options.isBillable
+
+			// If there is a default configuration for the project key, use that configuration.
+			if projectConfig, ok := t.Config().Projects[key]; ok {
+				isBillable = projectConfig.Billable
+			}
+
+			if options.isNonBillable {
+				isBillable = false
+			}
+
 			record := core.Record{
 				Project:    project,
 				Start:      start,
 				End:        &end,
-				IsBillable: options.isBillable,
+				IsBillable: isBillable,
 			}
 
 			collides, err := t.RecordCollides(record)
