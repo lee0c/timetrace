@@ -2,6 +2,7 @@ package cli
 
 import (
 	"time"
+	"strings"
 
 	"github.com/dominikbraun/timetrace/core"
 	"github.com/dominikbraun/timetrace/out"
@@ -100,6 +101,15 @@ func createRecordCommand(t *core.Timetrace) *cobra.Command {
 			}
 
 			isBillable := options.isBillable
+
+			// If this is a module, and there is a default configuration for the overall project,
+			// use that configuration.
+			if strings.Contains(key, "@") {
+				projectWithoutModule := strings.Split(key, "@")[1];
+				if projectWithoutModuleConfig, ok := t.Config().Projects[projectWithoutModule]; ok {
+					isBillable = projectWithoutModuleConfig.Billable
+				}
+			}
 
 			// If there is a default configuration for the project key, use that configuration.
 			if projectConfig, ok := t.Config().Projects[key]; ok {
