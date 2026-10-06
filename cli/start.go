@@ -36,6 +36,15 @@ func startCommand(t *core.Timetrace) *cobra.Command {
 
 			isBillable := options.isBillable
 
+			// If this is a module, and there is a default configuration for the overall project,
+			// use that configuration.
+			if strings.Contains(projectKey, "@") {
+				projectWithoutModule := strings.Split(projectKey, "@")[1];
+				if projectWithoutModuleConfig, ok := t.Config().Projects[projectWithoutModule]; ok {
+					isBillable = projectWithoutModuleConfig.Billable
+				}
+			}
+
 			// If there is a default configuration for the project key, use that configuration.
 			if projectConfig, ok := t.Config().Projects[projectKey]; ok {
 				isBillable = projectConfig.Billable
